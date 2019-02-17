@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<title>Planechase</title>
+<meta name="theme-color" content="#181510" />
+<style>
+	html {
+		background-color:#181510;
+		font-family: "Arial", "Helvetica", "sans-serif";
+	}
+	body{
+		text-align:center;
+		overflow:hidden;
+	}
+	#view{
+		width:100%;
+		height:100%;
+		position:absolute;
+		top:0px;
+		left:0px;
+	}
+	#refresh{
+		background-color:white;
+		border: 0;
+		font-size:1em;
+		position:absolute;
+		width:3.5em;
+		height:3.5em;
+		top:0px;
+		left:0px;
+		z-index:1;
+		opacity:0.3;
+		border: 0;
+		outline: none !important;
+		touch-action: manipulation;
+	}
+	#content{
+		position:absolute;
+		bottom:0;
+		left:0;
+		top:0;
+		right:0;
+		margin:auto;
+	}
+	#card{
+		position:absolute;
+		width:inherit;
+		height:inherit;
+		bottom:0;
+		left:0;
+		top:0;
+		right:0;
+		margin:auto;
+		z-index:0;
+		transform: rotate(90deg);
+		-webkit-transform: rotate(90deg);
+	}
+	#select{
+		font-size:1.15em;
+		margin-top:0.93em;
+		z-index:1;
+		opacity:0.0;
+		display:none;
+	}
+	#loading{
+		top: 8.5em;
+		position: absolute;
+		width: 100%;
+		z-index: 1;
+		opacity: 0;
+		pointer-events: none;
+	}
+	#loading>*{
+		padding: 1em 2em;
+		color: white;
+		border-radius: 0.5em;
+		background-color: rgba(0,0,0,0.8);
+	}
+</style>
+</head>
+<body>
+<div id='view' >
+	<div id='content'>
+		<div id='loading'><span>Loading</span></div>
+		<img id='card' />
+		<select id="select"></select>
+		<button id='refresh'></button>
+	</div>
+</div>
+</body>
+<script type='text/javascript'>
+(function() {
+	var cards = ["Academy_at_Tolaria_West","Agyrem","Akoum","Aretopolis","Astral_Arena","Bant","Bloodhill_Bastion","Celestine_Reef","Cliffside_Market","Edge_of_Malacol","Eloren_Wilds","Feeding_Grounds","Fields_of_Summer","Furnace_Layer","Gavony","Glen_Elendra","Glimmervoid_Basin","Goldmeadow","Grand_Ossuary","Grixis","Grove_of_the_Dreampods","Hedron_Fields_of_Agadeem","Horizon_Boughs","Immersturm","Isle_of_Vesuva","Izzet_Steam_Maze","Jund","Kessig","Kharasha_Foothills","Kilnspire_District","Krosa","Lair_of_the_Ashen_Idol","Lethe_Lake","Llanowar","Minamo","Mirrored_Depths","Mount_Keralia","Murasa","Naar_Isle","Naya","Nephalia","Norn's_Dominion","Onakke_Catacomb","Orochi_Colony","Orzhova","Otaria","Panopticon","Pools_of_Becoming","Prahv","Quicksilver_Sea","Raven's_Run","Sanctum_of_Serra","Sea_of_Sand","Selesnya_Loft_Gardens","Shiv","Skybreen","Sokenzan","Stairs_to_Infinity","Stensia","Stronghold_Furnace","Takenuma","Talon_Gates","Tazeem","Tember_City","The_Aether_Flues","The_Dark_Barony","The_Eon_Fog","The_Fourth_Sphere","The_Great_Forest","The_Hippodrome","The_Maelstrom","The_Zephyr_Maze","Trail_of_the_Mage-Rings","Truga_Jungle","Turri_Island","Undercity_Reaches","Velis_Vel","Windriddle_Palaces"];
+	var view = document.getElementById("view");
+	var content = document.getElementById("content");
+	var select = document.getElementById("select");
+	var refresh = document.getElementById("refresh");
+	var card = document.getElementById("card");
+	var delayedResize = false;
+	var timeout;
+
+	function resize() {
+		var width = view.offsetWidth;
+		var height = view.offsetHeight;
+
+		if (width < height * 1.45373) {
+			content.style.width = width + "px";
+			content.style.height = width * 0.68787 + "px";
+			card.style.width = content.style.height;
+			card.style.height = content.style.width;
+		}
+		else {
+			content.style.width = height * 1.45373 + "px";
+			content.style.height = height + "px";
+			card.style.width = content.style.height;
+			card.style.height = content.style.width;
+
+		}
+
+		document.body.style.fontSize = content.offsetHeight / 32 + "pt";
+	}
+
+	function throttleResize() {
+		if (timeout !== undefined) {
+			delayedResize = true;
+			return;
+		}
+
+		resize();
+		timeout = window.setTimeout(function() {
+			if (delayedResize) {
+				resize();
+			}
+
+			timeout = undefined;
+			delayedResize = false;
+		});
+	}
+
+	function random() {
+		var randomNumber = Math.floor(Math.random() * (cards.length - 1));
+		randomNumber = randomNumber >= select.value ? randomNumber + 1 : randomNumber;
+		select.style.display = "inline";
+		select.value = randomNumber;
+		change();
+	}
+
+	function change() {
+		card.setAttribute("src", "https://bejbej.github.io/planechase-cdn/" + cards[select.value] + ".jpg");
+		showLoading();
+	}
+
+	function showLoading() {
+		loading.style.opacity = "1";
+		loading.style.transitionDuration = "200ms";
+	}
+
+	function hideLoading() {
+		loading.style.opacity = "0";
+		loading.style.transitionDuration = "0";
+	}
+
+	for (var i = 0; i < cards.length; ++i) {
+		var option = document.createElement("option");
+		option.value = i;
+		option.textContent = cards[i].replace(/_/g, " ");
+		select.appendChild(option);
+	}
+
+	resize();
+	random();
+	window.addEventListener("resize", resize);
+	refresh.addEventListener("click", random);
+	select.addEventListener("change", change);
+	card.addEventListener("load", hideLoading);
+})();
+</script>
+</html>
